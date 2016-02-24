@@ -78,13 +78,13 @@ typeApp tl tr                       = TypeApp tl tr
 
 tyConApp :: TyCon -> [Type] -> Type
 tyConApp tc@(TyCon _ a) ts
-    | a < length ts = error "tyConApp: type constructor "
-                         ++ show tc
-                         ++ " expects "
-                         ++ show a
-                         ++ " arguments but "
-                         ++ show (length ts)
-                         ++ " were applied."
+    | a < length ts = error ("tyConApp: type constructor "
+                          ++ show tc
+                          ++ " expects "
+                          ++ show a
+                          ++ " arguments but "
+                          ++ show (length ts)
+                          ++ " were applied.")
 
 forall :: [TyVar] -> Type -> Type
 forall = TypeUQuant
