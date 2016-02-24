@@ -162,7 +162,7 @@ tuple10TyCon :: TyCon
 tuple10TyCon = TyCon "(,,,,,,,,,)" 10
 
 listTyCon :: TyCon
-listTyCon = TyCon "([])" 1
+listTyCon = TyCon "[]" 1
 
 maybeTyCon :: TyCon
 maybeTyCon = TyCon "Maybe" 1
@@ -210,3 +210,6 @@ applicativeClass = Class "Applicative" 1
 
 monadClass :: Class
 monadClass = Class "Monad" 1
+
+monoidClass :: Class
+monoidClass = Class "Monoid" 1
