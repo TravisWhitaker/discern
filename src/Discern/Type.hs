@@ -91,7 +91,15 @@ forall :: [TyVar] -> Type -> Type
 forall = TypeUQuant
 
 constraint :: Class -> [TyVar] -> Type -> Type
-constraint = TypeConstraint
+constraint c@(Class _ a) tvs t
+    | a == length tvs = TypeConstraint c tvs t
+    | otherwise = error ("constraint: class "
+                      ++ show c
+                      ++ " expects "
+                      ++ show a
+                      ++ "arguments but "
+                      ++ show (length tvs)
+                      ++ "were applied.")
 
 normalizeTyVar :: (Int, M.Map String Int) -> TyVar -> ((Int, M.Map String Int), TyVar)
 normalizeTyVar (m, im) (TyVar n _)
