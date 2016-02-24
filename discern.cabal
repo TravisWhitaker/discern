@@ -17,10 +17,13 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Discern
+  exposed-modules:     Discern.Expectation
+                     , Discern.Report
+                     , Discern.Type
   -- other-extensions:    
   build-depends:       base
                      , ghc
                      , ghc-paths
+                     , containers
   hs-source-dirs:      src
   default-language:    Haskell2010
