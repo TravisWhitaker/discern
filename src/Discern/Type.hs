@@ -85,6 +85,7 @@ tyConApp tc@(TyCon _ a) ts
                           ++ " arguments but "
                           ++ show (length ts)
                           ++ " were applied.")
+    | otherwise = TypeTyConApp tc ts
 
 forall :: [TyVar] -> Type -> Type
 forall = TypeUQuant
@@ -192,3 +193,12 @@ readClass = Class "Read" 1
 
 showClass :: Class
 showClass = Class "Show" 1
+
+functorClass :: Class
+functorClass = Class "Functor" 1
+
+applicativeClass :: Class
+applicativeClass = Class "Applicative" 1
+
+monadClass :: Class
+monadClass = Class "Monad" 1
