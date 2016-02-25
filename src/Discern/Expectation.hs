@@ -14,14 +14,14 @@ data Expectation = Expectation {
   }
 
 data ExModule = ExModule {
-    emName :: String
-  , emTypes :: [ExExport]
+    emName    :: String
+  , emExports :: [ExExport]
   }
 
 data ExExport = ExType {
                   etTyConName   :: String
                 , etTyConTyVars :: ExTyConTyVars
-                , etDataConss   :: [ExDataCon]
+                , etDataCons    :: [ExDataCon]
                 }
               | ExpectedClass {
                   ecName    :: String
