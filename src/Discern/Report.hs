@@ -11,6 +11,7 @@ data Report = Report {
     -- | Typically generated from the 'Expectation' name.
     rFilePath :: FilePath
   , rInitRep  :: InitStatus
+  , rCompFail :: Maybe String
   , rModReps  :: [ModuleReport]
   }
 
