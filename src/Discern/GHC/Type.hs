@@ -52,5 +52,5 @@ ghcTypeToType gt
                         of Nothing -> Left ("Weird unknown type: " ++ (G.showSDocUnsafe (G.ppr gt)))
                            (Just (tl, tr)) -> TypeApp <$> ghcTypeToType tl <*> ghcTypeToType tr
 
-discernType :: String -> G.Ghc (Either String Type)
-discernType = (ghcTypeToType <$>) . G.exprType
+exprType :: String -> G.Ghc (Either String Type)
+exprType = (ghcTypeToType <$>) . G.exprType
