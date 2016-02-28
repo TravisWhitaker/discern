@@ -20,6 +20,7 @@ library
   exposed-modules:     Discern.Expectation
                      , Discern.Report
                      , Discern.Type
+                     , Discern.GHC.Expectation
                      , Discern.GHC.Type
                      , Discern.GHC.Env
   -- other-extensions:    

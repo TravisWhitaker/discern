@@ -58,6 +58,10 @@ data TyConTyVarRep = TyConTyVarOK
                      , tctvObNames :: [String]
                      }
 
+tyConTyVarOK :: TyConTyVarRep -> Bool
+tyConTyVarOK TyConTyVarOK = True
+tyConTyVarOK _            = False
+
 data DataConRep = DataConOK {
                     dcName :: String
                   }
@@ -70,6 +74,13 @@ data DataConRep = DataConOK {
                     dcName :: String
                   }
 
+dataConOK :: DataConRep -> Bool
+dataConOK (DataConOK _) = True
+dataConOK _             = False
+
+dataConsOK :: [DataConRep] -> Bool
+dataConsOK = all dataConOK
+
 data ClassTyVarRep = ClassTyVarOK
                    | ClassTyVarWrongArity {
                        ctvExArity :: Int
@@ -79,6 +90,10 @@ data ClassTyVarRep = ClassTyVarOK
                        ctvExNames :: [String]
                      , ctvObNames :: [String]
                      }
+
+classTyVarOK :: ClassTyVarRep -> Bool
+classTyVarOK ClassTyVarOK = True
+classTyVarOK _            = False
 
 data ClassMethRep = ClassMethOK {
                       cmName :: String
@@ -92,20 +107,39 @@ data ClassMethRep = ClassMethOK {
                       cmName :: String
                     }
 
+classMethOK :: ClassMethRep -> Bool
+classMethOK (ClassMethOK _) = True
+classMethOK _               = False
+
+classMethsOK :: [ClassMethRep] -> Bool
+classMethsOK = all classMethOK
+
 data SymbolTypeRep = SymbolTypeOK
                    | SymbolTypeWrong {
                        stExType :: Type
                      , stObType :: Either String Type
                      }
 
+symbolTypeOK :: SymbolTypeRep -> Bool
+symbolTypeOK SymbolTypeOK = True
+symbolTypeOK _            = False
+
 data TestRep = TestRep {
     testName   :: String
   , testResult :: Result
   }
 
+testOK :: TestRep -> Bool
+testOK (TestRep _ (Result Success _ _ _)) = True
+testOK _                                  = False
+
+testsOK :: [TestRep] -> Bool
+testsOK = all testOK
+
 renderReport :: Report -> String
-renderReport (Report _ (InitFail e) _) = unlines ["Expectation initialization failed: " ++ e]
-renderReport (Report _ InitOK mrs) = unlines $ "Initialization OK." : map (unlines . renderModuleReport) mrs
+renderReport (Report _ (InitFail e) _ _)   = unlines ["Expectation initialization failed: " ++ e]
+renderReport (Report _ InitOK (Just s) _)  = unlines ["Initialization OK.", "Compilation failure: " ++ s]
+renderReport (Report _ InitOK Nothing mrs) = unlines $ "Initialization OK." : map (unlines . renderModuleReport) mrs
 
 renderModuleReport :: ModuleReport -> [String]
 renderModuleReport (ModuleReport n es) = ("Reporting on module " ++ n ++ ":")

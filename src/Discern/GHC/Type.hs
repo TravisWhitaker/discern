@@ -12,6 +12,8 @@ import qualified Outputable as G
 
 import qualified Type       as G
 
+import qualified Var        as G
+
 unTypeTyVar :: Type -> Either String TyVar
 unTypeTyVar (TypeTyVar tv) = Right tv
 unTypeTyVar _              = Left "unTypeTyCon: Type wasn't a TyVar."
@@ -54,3 +56,13 @@ ghcTypeToType gt
 
 exprType :: String -> G.Ghc (Either String Type)
 exprType = (ghcTypeToType <$>) . G.exprType
+
+ghcDataConTypeToType :: G.DataCon -> Either String Type
+ghcDataConTypeToType dc = normalizeScopedType tvs <$> ghcTypeToType (G.dataConType dc)
+    where tvs = map ghcTyVarToTyVar (G.tyConTyVars (G.dataConTyCon dc))
+
+ghcClassMethTypeToType :: G.Id -> Either String Type
+ghcClassMethTypeToType i = classTyVars >>= (\tvs -> normalizeScopedType tvs <$> ghcTypeToType (G.varType i))
+    where classTyVars = case G.isClassOpId_maybe i
+                            of Nothing  -> Left "ghcClassMethTypeToType: Id wasn't a class method."
+                               (Just c) -> Right (map ghcTyVarToTyVar (G.classTyVars c))

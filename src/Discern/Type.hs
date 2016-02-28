@@ -31,11 +31,6 @@ data Type = TypeTyVar TyVar
 --                                                    . (foldl (\s f -> (f . (++ " ") . s)) id (map (showsPrec 8) ts))
 --                                                    . (showsPrec 8 t))
 
--- | A type whose 'TyVar's indices have been normalized. Only 'AlphaType's are
---   alpha-equatable and are sensibly 'Show'-able.
-newtype AlphaType = AlphaType Type
-                  deriving (Eq, Show)
-
 data TyVar = TyVar {
     tyVarName :: String
   , tyVarLI   :: Int
@@ -107,8 +102,8 @@ normalizeTyVar (m, im) (TyVar n _)
     | otherwise     = let m' = m + 1
                       in ((m', (M.insert n m' im)), (TyVar n m'))
 
-normalizeType :: Type -> AlphaType
-normalizeType t = AlphaType (snd (go ((0, M.empty), t)))
+normalizeType :: Type -> Type
+normalizeType t = snd (go ((0, M.empty), t))
     where go ((m, im), (TypeTyVar tv))           = let ((m', im'), tv') = normalizeTyVar (m, im) tv
                                                    in ((m', im'), TypeTyVar tv')
           go ((m, im), (TypeApp tl tr))          = let ((m', im'), tl')   = go ((m, im), tl)
@@ -124,10 +119,29 @@ normalizeType t = AlphaType (snd (go ((0, M.empty), t)))
           goList as ((m, im), (t:ts))            = let ((m', im'), t') = go ((m, im), t)
                                                    in goList (t':as) ((m', im'), ts)
 
+-- | Normalize a type with respect to an enclosing scope's 'TyVar's.
+normalizeScopedType :: [TyVar] -> Type -> Type
+normalizeScopedType []   t = normalizeType t
+normalizeScopedType stvs t = snd (go ((mx, pim), t))
+    where go ((m, im), (TypeTyVar tv))           = let ((m', im'), tv') = normalizeTyVar (m, im) tv
+                                                   in ((m', im'), TypeTyVar tv')
+          go ((m, im), (TypeApp tl tr))          = let ((m', im'), tl')   = go ((m, im), tl)
+                                                       ((m'', im''), tr') = go ((m', im'), tr)
+                                                   in ((m'', im''), (TypeApp tl' tr'))
+          go ((m, im), (TypeTyConApp tc ts))     = let ((m', im'), ts') = goList [] ((m, im), ts)
+                                                   in ((m', im'), (TypeTyConApp tc ts'))
+          go ((m, im), (TypeUQuant tvs t))       = let ((m', im'), t') = go ((m, im), t)
+                                                   in ((m', im'), (TypeUQuant tvs t'))
+          go ((m, im), (TypeConstraint c tvs t)) = let ((m', im'), t') = go ((m, im), t)
+                                                  in ((m', im'), (TypeConstraint c tvs t'))
+          goList as ((m, im), [])                = ((m, im), reverse as)
+          goList as ((m, im), (t:ts))            = let ((m', im'), t') = go ((m, im), t)
+                                                   in goList (t':as) ((m', im'), ts)
+          mx                                     = (length stvs) - 1
+          pim                                    = M.fromList $ zip (map tyVarName stvs) [0..]
+
 typeEq :: Type -> Type -> Bool
-typeEq tl tr = let (AlphaType tl') = normalizeType tl
-                   (AlphaType tr') = normalizeType tr
-               in tl' == tr'
+typeEq tl tr = (normalizeType tl) == (normalizeType tr)
 
 -- * Common 'TyCon's
 

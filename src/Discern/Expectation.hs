@@ -23,17 +23,17 @@ data ExExport = ExType {
                 , etTyConTyVars :: ExTyConTyVars
                 , etDataCons    :: [ExDataCon]
                 }
-              | ExpectedClass {
+              | ExClass {
                   ecName    :: String
                 , ecTyVars  :: ExClassTyVars
                 , ecMethods :: [ExClassMeth]
                 }
-              | ExpectedInstance {
+              | ExInstance {
                   eiClassName :: String
                 , eiInstTy    :: [Type]
                 , eiMethNames :: [String]
                 }
-              | ExpectedSymbol {
+              | ExSymbol {
                   esName  :: String
                 , esType  :: Type
                 , exTests :: [String]
