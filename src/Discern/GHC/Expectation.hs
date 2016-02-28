@@ -1,5 +1,7 @@
 module Discern.GHC.Expectation where
 
+import Control.Monad.Trans
+
 import Data.List (find)
 
 import qualified Data.Map.Strict as M
@@ -11,12 +13,12 @@ import Discern.GHC.Type
 import Discern.Report
 import Discern.Type
 
+import qualified InstEnv         as G
 import qualified GHC             as G
 import qualified GHC.Paths       as G
 import qualified Name            as G
 
-qual :: String -> String
-qual = ("UT." ++)
+import Unsafe.Coerce
 
 getTyThing :: String -> G.Ghc (Maybe G.TyThing)
 getTyThing n = do
@@ -29,9 +31,9 @@ getClsInsts :: String -> G.Ghc [G.ClsInst]
 getClsInsts n = do
     ns <- G.parseName n
     case ns of []    -> return []
-               (n:_) -> case G.getInfo True n
-                            of Nothing               -> return []
-                               (Just (_, _, cis, _)) -> return cis
+               (n:_) -> do i <- G.getInfo True n
+                           case i of Nothing               -> return []
+                                     (Just (_, _, cis, _)) -> return cis
 
 tyConTyVarRep :: ExTyConTyVars -> [G.TyVar] -> TyConTyVarRep
 tyConTyVarRep (ExTyConArity n) gtvs
@@ -72,7 +74,7 @@ classTyVarRep :: ExClassTyVars -> [G.TyVar] -> ClassTyVarRep
 classTyVarRep (ExClassArity n) gtvs
     | n == length gtvs = ClassTyVarOK
     | otherwise        = ClassTyVarWrongArity n (length gtvs)
-classTyVarRep (ExClassVarNames ns) gtve =
+classTyVarRep (ExClassVarNames ns) gtvs =
     let gns = map (G.occNameString . G.getOccName) gtvs
     in if ns == gns
        then ClassTyVarOK
@@ -90,10 +92,10 @@ classMethRep gis (ExClassMeth n t) =
                (Just (_, (Left e)))   -> ClassMethWrongType n t (Left e)
                (Just (_, (Right gt))) -> if t == gt
                                          then ClassMethOK n
-                                         else ClassMethWrongType n t gt
+                                         else ClassMethWrongType n t (Right gt)
 
 classReport :: ExExport -> G.TyCon -> ExReport
-classReport (ExClass n vs ms) gtc =
+classReport (ExClass n vs ms) gtc
     | G.isClassTyCon gtc = let tvr  = classTyVarRep vs (G.tyConTyVars gtc)
                                cls  = fromJust (G.tyConClass_maybe gtc)
                                cmrs = map (classMethRep (G.classMethods cls)) ms
@@ -106,14 +108,39 @@ classReport _ _ = error "classReport can only be called on ExClasses"
 
 checkInstance :: [Type] -> G.ClsInst -> Bool
 checkInstance ts ci = let tvs = map ghcTyVarToTyVar (G.is_tvs ci)
-                          cts = map (normalizeScopedType tvs) (G.is_tys)
-                      in ts == cts
+                          cts = (map (normalizeScopedType tvs)) <$> (mapM ghcTypeToType (G.is_tys ci))
+                      in case cts of (Left _)    -> False
+                                     (Right gts) -> ts == gts
+
+symbolTypeRep :: String -> Type -> G.Ghc SymbolTypeRep
+symbolTypeRep n t = do
+    et <- exprType n
+    case et of (Left e)   -> return (SymbolTypeWrong t (Left e))
+               (Right gt) -> return (if typeEq gt t
+                                     then SymbolTypeOK
+                                     else SymbolTypeWrong t (Right gt))
+
+symbolCheck :: String -> SymbolTypeRep -> [TestRep] -> ExReport
+symbolCheck n str trs = let stat
+                              | symbolTypeOK str && testsOK trs = ExportCorrect
+                              | otherwise                       = ExportWrong
+                        in SymbolReport n stat str trs
+
+symbolRunTests :: [String] -> G.Ghc [TestRep]
+symbolRunTests = mapM symbolRunTest
+
+symbolRunTest :: String -> G.Ghc TestRep
+symbolRunTest n = (unsafeCoerce <$> G.compileExpr ("runTest" ++ n))
+    >>= (liftIO . (TestRep n <$>))
 
 symbolReport :: ExExport -> G.Ghc ExReport
-symbolReport = undefined
+symbolReport (ExSymbol n t ts) = do
+    ct <- symbolTypeRep n t
+    if symbolTypeOK ct then symbolCheck n ct <$> symbolRunTests ts
+                       else return (SymbolReport n ExportWrong ct undefined)
+symbolReport _ = error "symbolReport can only be called on ExSymbols"
 
--- | Assumes the relevant modules are in scope and imported qualified with the
---   "UT." prefix.
+-- | Assumes the relevant modules and tests are in scope.
 runExExport :: ExExport -> G.Ghc ExReport
 runExExport e@(ExType n _ _)   = do
     tyt <- getTyThing n
@@ -131,4 +158,4 @@ runExExport (ExInstance cn ts) = do
 runExExport e@(ExSymbol n t ts) = do
     tyt <- getTyThing n
     case tyt of (Just _) -> symbolReport e
-                _        -> return $ SymbolReport n ExportMissing undefined undefined
+                _        -> return $ SymbolReport n ExportAbsent undefined undefined

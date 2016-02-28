@@ -31,7 +31,6 @@ data ExExport = ExType {
               | ExInstance {
                   eiClassName :: String
                 , eiInstTy    :: [Type]
-                , eiMethNames :: [String]
                 }
               | ExSymbol {
                   esName  :: String
