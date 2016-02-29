@@ -190,5 +190,5 @@ runExModule e@(ExModule n ts xs) = do
 runExpectation :: Expectation -> IO Report
 runExpectation (Expectation n init xs) = do
     is <- init
-    case is of InitOK -> G.runGhc (Just G.libdir) (Report (n ++ "_report.txt") is Nothing <$> mapM runExModule xs)
+    case is of InitOK -> G.runGhc (Just G.libdir) (withDiscernEnv (Report (n ++ "_report.txt") is Nothing <$> mapM runExModule xs))
                _      -> return (Report (n ++ "_report.txt") is Nothing [])
