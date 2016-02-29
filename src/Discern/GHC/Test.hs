@@ -16,7 +16,7 @@ import Test.Tasty.SmallCheck
 defaultOptionSet :: OptionSet
 defaultOptionSet = mconcat os
     where os = [ singleOption (QuickCheckTests 1000)
-               , singleOption (SmallCheckDepth 6)
+               , singleOption (SmallCheckDepth 5)
                ]
 
 runTestTree :: TestTree -> IO [TestRep]

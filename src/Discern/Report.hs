@@ -144,7 +144,7 @@ renderReport (Report _ InitOK Nothing mrs) = unlines $ "Initialization OK." : ma
 renderModuleReport :: ModuleReport -> [String]
 renderModuleReport (ModuleReport n []) = ["Module " ++ n ++ "has no tests or couldn't be loaded."]
 renderModuleReport (ModuleReport n es) = ("Reporting on module " ++ n ++ ":")
-                                       : map (unlines . map ('\t':) . renderExReport) es
+                                       : map (concat . map ('\t':) . renderExReport) es
 
 renderExReport :: ExReport -> [String]
 renderExReport (TypeReport n ExportCorrect _ _)     = ["Exported type " ++ n ++ " OK."]
