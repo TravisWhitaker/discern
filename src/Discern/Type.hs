@@ -2,6 +2,8 @@ module Discern.Type where
 
 import           Data.List
 
+import Data.String
+
 import qualified Data.Map.Strict as M
 
 import Text.Show
@@ -41,6 +43,9 @@ instance Eq TyVar where
 
 instance Show TyVar where
     show (TyVar s _) = s
+
+instance IsString TyVar where
+    fromString = mkLocalTyVar
 
 data TyCon = TyCon {
     tyConName  :: String
