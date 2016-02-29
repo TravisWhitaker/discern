@@ -10,6 +10,7 @@ import Data.Maybe (fromJust)
 
 import Discern.Expectation
 import Discern.GHC.Type
+import Discern.GHC.Env
 import Discern.Report
 import Discern.Type
 
