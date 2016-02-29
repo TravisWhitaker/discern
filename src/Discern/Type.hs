@@ -87,6 +87,13 @@ tyConApp tc@(TyCon _ a) ts
                           ++ " were applied.")
     | otherwise = TypeTyConApp tc ts
 
+concrete :: TyCon -> Type
+concrete (TyCon _ a)
+    | a == 0    = TypeTyConApp tc []
+    | otherwise = error ("concrete: type constructor "
+                      ++ show tc
+                      ++ " has non-zero arity.")
+
 forall :: [TyVar] -> Type -> Type
 forall = TypeUQuant
 
