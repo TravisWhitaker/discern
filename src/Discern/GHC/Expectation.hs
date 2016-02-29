@@ -130,6 +130,7 @@ symbolCheck n str trs = let stat
                         in SymbolReport n stat str trs
 
 symbolRunTests :: String -> String -> G.Ghc [TestRep]
+symbolRunTests "" "" = return []
 symbolRunTests m n = do
     l <- loadMod m
     if l then (unsafeCoerce <$> G.compileExpr ("runTestTree " ++ n)) >>= liftIO
