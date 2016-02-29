@@ -139,7 +139,7 @@ symbolReport :: ExExport -> G.Ghc ExReport
 symbolReport (ExSymbol n t tm ts) = do
     ct <- symbolTypeRep n t
     if symbolTypeOK ct then symbolCheck n ct <$> symbolRunTests tm ts
-                       else return (SymbolReport n ExportWrong ct undefined)
+                       else return (SymbolReport n ExportWrong ct [])
 symbolReport _ = error "symbolReport can only be called on ExSymbols"
 
 -- | Assumes the relevant modules and tests are in scope.
