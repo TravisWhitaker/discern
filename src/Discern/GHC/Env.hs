@@ -11,7 +11,8 @@ discernEnv = do
                               , G.ghcLink   = G.LinkInMemory
                               }
     G.setContext [ G.IIDecl (G.simpleImportDecl (G.mkModuleName "Prelude"))
-                 , G.IIDecl (G.simpleImportDecl (G.mkModuleName "Discern.GHC.Test"))]
+                 , G.IIDecl (G.simpleImportDecl (G.mkModuleName "Discern.GHC.Test"))
+                 ]
 
 withDiscernEnv :: G.Ghc a -> G.Ghc a
 withDiscernEnv = (discernEnv >>)
