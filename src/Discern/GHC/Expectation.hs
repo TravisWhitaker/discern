@@ -25,10 +25,14 @@ import Unsafe.Coerce
 
 getTyThing :: String -> G.Ghc (Maybe G.TyThing)
 getTyThing n = do
-    ns <- G.parseName n
-    case ns
-        of []    -> return Nothing
-           (n:_) -> G.lookupName n
+    is <- (map G.getOccString) <$> G.getNamesInScope
+    if elem n is then getTYT else return Nothing
+    where getTYT = do
+            ns <- G.parseName n
+            case ns
+                of []     -> return Nothing
+                   (gn:_) -> if (G.getOccString gn) == n then G.lookupName gn
+                                                         else return Nothing
 
 getClsInsts :: String -> G.Ghc [G.ClsInst]
 getClsInsts n = do
