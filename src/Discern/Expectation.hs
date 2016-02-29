@@ -35,7 +35,7 @@ data ExExport = ExType {
               | ExSymbol {
                   esName  :: String
                 , esType  :: Type
-                , exTests :: [String]
+                , exTest  :: String
                 }
 
 data ExTyConTyVars = ExTyConArity Int
