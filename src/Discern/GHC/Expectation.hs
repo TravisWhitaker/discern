@@ -13,7 +13,9 @@ import Discern.GHC.Type
 import Discern.Report
 import Discern.Type
 
+import qualified Exception       as G
 import qualified InstEnv         as G
+import qualified Panic           as G
 import qualified GHC             as G
 import qualified GHC.Paths       as G
 import qualified Name            as G
@@ -155,3 +157,38 @@ runExExport e@(ExSymbol n t ts) = do
     tyt <- getTyThing n
     case tyt of (Just _) -> symbolReport e
                 _        -> return $ SymbolReport n ExportAbsent undefined undefined
+
+loadMod :: String -> G.Ghc Bool
+loadMod n = do
+    G.guessTarget n Nothing >>= G.addTarget
+    G.load G.LoadAllTargets
+    cx <- G.getContext
+    G.handleGhcException (\_ -> return False)
+                         (G.setContext ((G.IIModule (G.mkModuleName n)):cx) >> return True)
+
+tryLoadMod :: String -> G.Ghc Bool
+tryLoadMod n = do
+    G.guessTarget n Nothing >>= G.addTarget
+    G.load G.LoadAllTargets
+    cx <- G.getContext
+    G.handleGhcException (\_ -> return False)
+                         (G.handleGhcException (\_ -> G.setContext ((G.IIModule (G.mkModuleName "Main")):cx) >> return True)
+                                               ((G.setContext ((G.IIModule (G.mkModuleName n)):cx)) >> return True))
+
+loadRunTests :: ExModule -> G.Ghc ModuleReport
+loadRunTests (ExModule n ts xs) = do
+    l <- loadMod ts
+    if l then ModuleReport n <$> mapM runExExport xs
+         else return (ModuleReport n [])
+
+runExModule :: ExModule -> G.Ghc ModuleReport
+runExModule e@(ExModule n ts xs) = do
+    l <- tryLoadMod n
+    if l then loadRunTests e
+         else return (ModuleReport n [])
+
+runExpectation :: Expectation -> IO Report
+runExpectation (Expectation n init xs) = do
+    is <- init
+    case is of InitOK -> G.runGhc (Just G.libdir) (Report (n ++ "_report.txt") is Nothing <$> mapM runExModule xs)
+               _      -> return (Report (n ++ "_report.txt") is Nothing [])

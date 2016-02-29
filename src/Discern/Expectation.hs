@@ -15,6 +15,7 @@ data Expectation = Expectation {
 
 data ExModule = ExModule {
     emName    :: String
+  , emTests   :: String
   , emExports :: [ExExport]
   }
 

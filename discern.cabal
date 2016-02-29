@@ -21,6 +21,7 @@ library
                      , Discern.Report
                      , Discern.Type
                      , Discern.GHC.Expectation
+                     , Discern.GHC.Test
                      , Discern.GHC.Type
                      , Discern.GHC.Env
   -- other-extensions:    
@@ -29,6 +30,7 @@ library
                      , ghc-paths
                      , containers
                      , mtl
+                     , stm
                      , tasty
                      , tasty-hspec
                      , tasty-quickcheck

@@ -142,6 +142,7 @@ renderReport (Report _ InitOK (Just s) _)  = unlines ["Initialization OK.", "Com
 renderReport (Report _ InitOK Nothing mrs) = unlines $ "Initialization OK." : map (unlines . renderModuleReport) mrs
 
 renderModuleReport :: ModuleReport -> [String]
+renderModuleReport (ModuleReport n []) = ["Module " ++ n ++ "has no tests or couldn't be loaded."]
 renderModuleReport (ModuleReport n es) = ("Reporting on module " ++ n ++ ":")
                                        : map (unlines . map ('\t':) . renderExReport) es
 
