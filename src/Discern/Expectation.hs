@@ -15,7 +15,6 @@ data Expectation = Expectation {
 
 data ExModule = ExModule {
     emName    :: String
-  , emTests   :: String
   , emExports :: [ExExport]
   }
 
@@ -34,9 +33,10 @@ data ExExport = ExType {
                 , eiInstTy    :: [Type]
                 }
               | ExSymbol {
-                  esName  :: String
-                , esType  :: Type
-                , exTest  :: String
+                  esName    :: String
+                , esType    :: Type
+                , exTestMod :: String
+                , exTestSym :: String
                 }
 
 data ExTyConTyVars = ExTyConArity Int

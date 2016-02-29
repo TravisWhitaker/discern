@@ -129,13 +129,16 @@ symbolCheck n str trs = let stat
                               | otherwise                       = ExportWrong
                         in SymbolReport n stat str trs
 
-symbolRunTests :: String -> G.Ghc [TestRep]
-symbolRunTests n = (unsafeCoerce <$> G.compileExpr ("runTestTree " ++ n)) >>= liftIO
+symbolRunTests :: String -> String -> G.Ghc [TestRep]
+symbolRunTests m n = do
+    l <- loadMod m
+    if l then (unsafeCoerce <$> G.compileExpr ("runTestTree " ++ n)) >>= liftIO
+         else return []
 
 symbolReport :: ExExport -> G.Ghc ExReport
-symbolReport (ExSymbol n t ts) = do
+symbolReport (ExSymbol n t tm ts) = do
     ct <- symbolTypeRep n t
-    if symbolTypeOK ct then symbolCheck n ct <$> symbolRunTests ts
+    if symbolTypeOK ct then symbolCheck n ct <$> symbolRunTests tm ts
                        else return (SymbolReport n ExportWrong ct undefined)
 symbolReport _ = error "symbolReport can only be called on ExSymbols"
 
@@ -154,7 +157,7 @@ runExExport (ExInstance cn ts) = do
     return $ if any (checkInstance ts) cls
              then InstanceReport ExportCorrect cn ts
              else InstanceReport ExportAbsent cn ts
-runExExport e@(ExSymbol n t ts) = do
+runExExport e@(ExSymbol n t tm ts) = do
     tyt <- getTyThing n
     case tyt of (Just _) -> symbolReport e
                 _        -> return $ SymbolReport n ExportAbsent undefined undefined
@@ -176,16 +179,10 @@ tryLoadMod n = do
                          (G.handleGhcException (\_ -> G.setContext ((G.IIModule (G.mkModuleName "Main")):cx) >> return True)
                                                ((G.setContext ((G.IIModule (G.mkModuleName n)):cx)) >> return True))
 
-loadRunTests :: ExModule -> G.Ghc ModuleReport
-loadRunTests (ExModule n ts xs) = do
-    l <- loadMod ts
-    if l then ModuleReport n <$> mapM runExExport xs
-         else return (ModuleReport n [])
-
 runExModule :: ExModule -> G.Ghc ModuleReport
-runExModule e@(ExModule n ts xs) = do
+runExModule e@(ExModule n xs) = do
     l <- tryLoadMod n
-    if l then loadRunTests e
+    if l then ModuleReport n <$> mapM runExExport xs
          else return (ModuleReport n [])
 
 runExpectation :: Expectation -> IO Report

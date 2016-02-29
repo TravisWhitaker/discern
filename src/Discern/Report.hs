@@ -160,6 +160,7 @@ renderExReport (ClassReport n ExportWrong vs ms)    = ("Exported class " ++ n ++
 renderExReport (InstanceReport ExportCorrect cn ts) = ["Exported instance of " ++ cn ++ " for type(s) " ++ show ts ++ " OK."]
 renderExReport (InstanceReport ExportAbsent cn ts)  = ["Exported instance of " ++ cn ++ "for type(s) " ++ show ts ++ " is absent."]
 renderExReport (InstanceReport ExportWrong cn ts)   = error "Instances may only be present or absent; not wrong."
+renderExReport (SymbolReport n ExportCorrect _ [])  = ["Exported symbol " ++ n ++ " seems OK, but has no tests or tests couldn't be loaded."]
 renderExReport (SymbolReport n ExportCorrect _ ts)  = ("Exported symbol " ++ n ++ " OK.")
                                                     : map (('\t':) . renderTestRep) ts
 renderExReport (SymbolReport n ExportAbsent _ _)    = ["Exported symbol " ++ n ++ " is absent."]
